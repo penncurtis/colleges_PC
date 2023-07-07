@@ -68,8 +68,28 @@ with app.app_context():
 
     
     thread_data = [
-        {"thread_vote_count": 5, "thread_university_id": 1, "thread_title": "sample"},
+        {"thread_vote_count": 5, "thread_university_id": 1, "thread_title": "Sample Thread 1"},
+        {"thread_vote_count": 10, "thread_university_id": 2, "thread_title": "Sample Thread 2"},
+        {"thread_vote_count": 3, "thread_university_id": 1, "thread_title": "Sample Thread 3"},
+        {"thread_vote_count": 8, "thread_university_id": 3, "thread_title": "Sample Thread 4"},
+        {"thread_vote_count": 2, "thread_university_id": 2, "thread_title": "Sample Thread 5"},
+        {"thread_vote_count": 7, "thread_university_id": 3, "thread_title": "Sample Thread 6"},
+        {"thread_vote_count": 4, "thread_university_id": 1, "thread_title": "Sample Thread 7"},
+        {"thread_vote_count": 6, "thread_university_id": 2, "thread_title": "Sample Thread 8"},
+        {"thread_vote_count": 9, "thread_university_id": 3, "thread_title": "Sample Thread 9"},
+        {"thread_vote_count": 1, "thread_university_id": 1, "thread_title": "Sample Thread 10"},
+        {"thread_vote_count": 12, "thread_university_id": 2, "thread_title": "Sample Thread 11"},
+        {"thread_vote_count": 5, "thread_university_id": 3, "thread_title": "Sample Thread 12"},
+        {"thread_vote_count": 8, "thread_university_id": 1, "thread_title": "Sample Thread 13"},
+        {"thread_vote_count": 3, "thread_university_id": 2, "thread_title": "Sample Thread 14"},
+        {"thread_vote_count": 7, "thread_university_id": 3, "thread_title": "Sample Thread 15"},
+        {"thread_vote_count": 4, "thread_university_id": 1, "thread_title": "Sample Thread 16"},
+        {"thread_vote_count": 6, "thread_university_id": 2, "thread_title": "Sample Thread 17"},
+        {"thread_vote_count": 9, "thread_university_id": 3, "thread_title": "Sample Thread 18"},
+        {"thread_vote_count": 2, "thread_university_id": 1, "thread_title": "Sample Thread 19"},
+        {"thread_vote_count": 11, "thread_university_id": 2, "thread_title": "Sample Thread 20"},
     ]
+
     def seed_threads():
         for data in thread_data:
             thread = Thread(**data)
@@ -91,7 +111,27 @@ with app.app_context():
     
     post_data = [
         {"post_content": "Sample post 1", "post_vote_count": 2, "post_user_id": 1, "post_thread_id": 1},
+        {"post_content": "Sample post 2", "post_vote_count": 5, "post_user_id": 2, "post_thread_id": 1},
+        {"post_content": "Sample post 3", "post_vote_count": 3, "post_user_id": 3, "post_thread_id": 2},
+        {"post_content": "Sample post 4", "post_vote_count": 1, "post_user_id": 1, "post_thread_id": 2},
+        {"post_content": "Sample post 5", "post_vote_count": 4, "post_user_id": 2, "post_thread_id": 3},
+        {"post_content": "Sample post 6", "post_vote_count": 2, "post_user_id": 3, "post_thread_id": 3},
+        {"post_content": "Sample post 7", "post_vote_count": 4, "post_user_id": 1, "post_thread_id": 3},
+        {"post_content": "Sample post 8", "post_vote_count": 3, "post_user_id": 2, "post_thread_id": 4},
+        {"post_content": "Sample post 9", "post_vote_count": 2, "post_user_id": 3, "post_thread_id": 4},
+        {"post_content": "Sample post 10", "post_vote_count": 1, "post_user_id": 1, "post_thread_id": 5},
+        {"post_content": "Sample post 11", "post_vote_count": 3, "post_user_id": 2, "post_thread_id": 5},
+        {"post_content": "Sample post 12", "post_vote_count": 5, "post_user_id": 3, "post_thread_id": 6},
+        {"post_content": "Sample post 13", "post_vote_count": 2, "post_user_id": 1, "post_thread_id": 6},
+        {"post_content": "Sample post 14", "post_vote_count": 4, "post_user_id": 2, "post_thread_id": 7},
+        {"post_content": "Sample post 15", "post_vote_count": 3, "post_user_id": 3, "post_thread_id": 7},
+        {"post_content": "Sample post 16", "post_vote_count": 1, "post_user_id": 1, "post_thread_id": 8},
+        {"post_content": "Sample post 17", "post_vote_count": 2, "post_user_id": 2, "post_thread_id": 8},
+        {"post_content": "Sample post 18", "post_vote_count": 3, "post_user_id": 3, "post_thread_id": 9},
+        {"post_content": "Sample post 19", "post_vote_count": 1, "post_user_id": 1, "post_thread_id": 9},
+        {"post_content": "Sample post 20", "post_vote_count": 4, "post_user_id": 2, "post_thread_id": 10},
     ]
+
     def seed_posts():
         for data in post_data:
             post = Post(**data)

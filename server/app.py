@@ -31,7 +31,9 @@ class Universities(Resource):
     
     def post(self):
         data = request.get_json()
-        university = University(university_name=data['university_name'])
+        university = University(
+            university_name=data['university_name'],
+            university_color=data['university_color'])
         db.session.add(university)
         db.session.commit()
         return jsonify({'message': 'University created!'}, 201)
