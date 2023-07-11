@@ -57,7 +57,7 @@ class Post(db.Model, SerializerMixin):
     post_content = db.Column(db.String)
     post_vote_count = db.Column(db.Integer, default=0)
 
-    post_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    post_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_thread_id = db.Column(db.Integer, db.ForeignKey('threads.id'), nullable=False)
 
     serialize_rules = ('-users', '-threads',)

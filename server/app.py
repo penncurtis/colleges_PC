@@ -2,18 +2,22 @@
 
 import ipdb
 
-from flask import Flask, make_response, jsonify, request, session
+from flask import Flask, make_response, jsonify, request, session, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
 
 from models import db, University, Thread, User, Post
 
 app = Flask(__name__)
+app.secret_key = 'CactusCactus'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///colleges.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
+
+bcrypt = Bcrypt(app)
 
 migrate = Migrate(app, db)
 
@@ -53,17 +57,6 @@ class Threads(Resource):
         threads = [thread.to_dict() for thread in Thread.query.all()]
         return make_response(jsonify(threads), 200)
     
-    def post(self):
-        data = request.get_json()
-        university = University.query.filter_by(id=data['thread_university_id']).first().to_dict()
-
-        new_thread = Thread(
-            thread_university_id=university['id']
-        )
-        db.session.add(new_thread)
-        db.session.commit()
-        return jsonify({'message': 'Thread created!'}, 201)
-    
 api.add_resource(Threads, "/threads")
 
 class ThreadsByUniversity(Resource):
@@ -76,36 +69,38 @@ class ThreadsByUniversity(Resource):
         # ipdb.set_trace()
         return make_response(jsonify(threads), 200)
 
-    def post(self):
+    def post(self, schoolname):
         data = request.get_json()
-        university = University.query.filter_by(id=data['thread_university_id']).first().to_dict()
-
+        
+        university = University.query.filter_by(university_name=schoolname).first()
         new_thread = Thread(
             thread_title=data['thread_title'],
-            thread_university_id=university['id']
+            thread_university_id=university.id
         )
+
         db.session.add(new_thread)
         db.session.commit()
         return jsonify({'message': 'Thread created!'}, 201)
 
-    def patch(self, id):
-        thread = Thread.query.filter_by(id=id).first()
-        data = request.get_json()
-        for attr in data:
-            setattr(thread, attr, data[attr])
-        db.session.commit()
-        response_body = thread.to_dict()
-        return make_response(jsonify(response_body), 202)
+api.add_resource(ThreadsByUniversity, "/<string:schoolname>/threads")
 
-    def delete(self, id):
-        thread = Thread.query.filter_by(id=id).first()
-        if not thread:
-            return jsonify({'message': 'Thread not found'}), 404
+class ThreadsByUniByID(Resource):
+
+    def get(self, schoolname, id):
+        university = University.query.filter_by(university_name=schoolname).first()
+        thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
+
+        return make_response(jsonify(thread.to_dict()), 200)
+
+    def delete(self, schoolname, id):
+        university = University.query.filter_by(university_name=schoolname).first()
+        thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
+
         db.session.delete(thread)
         db.session.commit()
         return jsonify({'message': 'Thread deleted successfully'}, 204)
 
-api.add_resource(ThreadsByUniversity, "/universities/<string:schoolname>/threads")
+api.add_resource(ThreadsByUniByID, "/<string:schoolname>/threads/<int:id>")
 
 class Posts(Resource):
     def get(self):
@@ -143,6 +138,13 @@ class PostByUniThread(Resource):
 
         if not thread or thread.university.university_name != schoolname:
             return jsonify({'message': 'Thread not found'}), 404
+        
+        user_id = check_session()  # Modify this line 
+
+        user = User.query.filter_by(id=user_id).first()
+        # ipdb.set_trace()
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
 
         data = request.get_json()
 
@@ -156,37 +158,91 @@ class PostByUniThread(Resource):
 
         return jsonify({'message': 'Post created!'}, 201)
 
-    def patch(self, id):
-        post = Post.query.filter_by(id=id).first()
+api.add_resource(PostByUniThread, "/<string:schoolname>/threads/<int:threadId>/posts")
+
+class PostByUniByID(Resource):
+
+    def get(self, schoolname, threadId, id):
+        university = University.query.filter_by(university_name=schoolname).first()
+        if not university:
+            return {'errors': "University not found"}, 404
+
+        thread = Thread.query.filter_by(id=threadId, thread_university_id=university.id).first()
+        if not thread:
+            return {'errors': "Thread not found"}, 404
+
+        post = Post.query.filter_by(id=id, post_thread_id=thread.id).first()
+        if not post:
+            return {'errors': "Post not found"}, 404
+
+        return make_response(jsonify(post.to_dict()) if post else {'errors': "Post not found"}, 200)
+
+    def patch(self, schoolname, threadId, id):
+        university = University.query.filter_by(university_name=schoolname).first()
+        thread = Thread.query.filter_by(id=threadId, thread_university_id=university.id).first()
+        post = Post.query.filter_by(id=id, post_thread_id=thread.id).first()
+        
         data = request.get_json()
         for attr in data:
             setattr(post, attr, data[attr])
+        ipdb.set_trace()
         db.session.commit()
         response_body = post.to_dict()
         return make_response(jsonify(response_body), 202)
 
-    def delete(self, id):
-        post = Post.query.filter_by(id=id).first()
-        if not post:
-            return jsonify({'message': 'Post not found'}), 404
+    def delete(self, schoolname, threadId, id):
+        university = University.query.filter_by(university_name=schoolname).first()
+        thread = Thread.query.filter_by(id=threadId, thread_university_id=university.id).first()
+        post = Post.query.filter_by(id=id, post_thread_id=thread.id).first()
+
         db.session.delete(post)
         db.session.commit()
         return jsonify({'message': 'Post deleted successfully'})
 
-api.add_resource(PostByUniThread, "/universities/<string:schoolname>/threads/<int:threadId>/posts")
+api.add_resource(PostByUniByID, "/<string:schoolname>/threads/<int:threadId>/posts/<int:id>")
 
-class Signup(Resource):
-    def post(self):
-        data = request.get_json()
-        user = User(
-            username=data['username'], 
-            password=data['password']
-        )
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({'message': 'User signed up successfully'}, 201)
-    
-api.add_resource(Signup, "/signup")
+
+# USER SIGNUP #
+
+@app.post('/users')
+def create_user():
+    json = request.json
+    incoming_password = json['password']
+    hashed_password = bcrypt.generate_password_hash(incoming_password).decode('utf-8')
+    new_user = User( username=json['username'], password=hashed_password )
+    session['user_id'] = new_user.id
+    db.session.add(new_user)
+    db.session.commit()
+    return new_user.to_dict(), 201
+
+# SESSION LOGIN/LOGOUT#
+
+@app.post('/login')
+def login():
+    json = request.json
+    user = User.query.filter(User.username == json['username']).first()
+    if user and bcrypt.check_password_hash( user.password, json['password'] ):
+        session['user_id'] = user.id
+        return user.to_dict(), 200
+    else:
+        return { 'error': 'Invalid username or password' }, 401
+
+
+@app.get('/check_session')
+def check_session():
+    user_id = session.get('user_id')
+    user = User.query.filter(User.id == user_id).first()
+    if user:
+        return user.to_dict(), 200
+    else:
+        return {"message": "Not logged in"}, 401
+
+
+
+@app.delete('/logout')
+def logout():
+    session['user_id'] = None
+    return {"message": "Successfully logged out"}, 200
 
 # MAKE CHECK-SESSION / LOGIN STUFF
 
