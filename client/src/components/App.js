@@ -1,105 +1,190 @@
 import '../App.css';
 import {useState, useEffect} from 'react'
-import { Route, Switch } from "react-router-dom"
+import { Route, Switch, useParams } from "react-router-dom"
 
+import UniversitiesList from './UniversitiesList'
+import NewUniversityForm from './NewUniversityForm'
+import Threads from './Threads';
+import Posts from './Posts';
 import NavBar from './NavBar'
 import Header from './Header'
-import HotelList from './HotelList'
-import NewHotelForm from './NewHotelForm'
-import UpdateHotelForm from './UpdateHotelForm'
+import AddThread from './AddThread';
+import Login from "./Login"
+import Signup from "./Signup"
+import UserDetails from "./UserDetails"
+import AddPost from './AddPost';
+import FeaturedThreads from './FeaturedThreads';
 
 function App() {
 
-  const [hotels, setHotels] = useState([])
-  const [postFormData, setPostFormData] = useState({})
-  const [idToUpdate, setIdToUpdate] = useState(0)
-  const [patchFormData, setPatchFormData] = useState({})
+  
+  
+
+  
+  // const [threadFormData, setThreadFormData] = useState({});
+  const [universities, setUniversities] = useState([]);
 
   useEffect(() => {
-    fetch('/hotels')
-    .then(response => response.json())
-    .then(hotelData => setHotels(hotelData))
+    fetch('/universities')
+      .then(response => response.json())
+      .then(unidata => setUniversities(unidata))
   }, [])
 
-  useEffect(() => {
-    if(hotels.length > 0 && hotels[0].id){
-      setIdToUpdate(hotels[0].id)
-    }
-  }, [hotels])
+  // add school stuff
+  const [postUniFormData, setPostUniFormData] = useState({});
 
-  function addHotel(event){
+  function addUniversity(event, formData){
     event.preventDefault()
 
-    fetch('/hotels', {
+    fetch('/universities', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify(postFormData)
+      body: JSON.stringify(formData)
     })
     .then(response => response.json())
-    .then(newHotel => setHotels(hotels => [...hotels, newHotel]))
+    .then(newUni => setUniversities(universities => [...universities, newUni]))
   }
 
-  function updateHotel(event){
-    event.preventDefault()
-    fetch(`/hotels/${idToUpdate}`, {
-      method: "PATCH",
+  function updatePostUniFormData(event){
+    setPostUniFormData({...postUniFormData, [event.target.name]: event.target.value})
+  }
+
+  // make thread stuff
+  const [threads, setThreads] = useState([]);
+
+  function addThread(newThread, schoolname) {
+    fetch(`/${schoolname}/threads`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify(patchFormData)
+      body: JSON.stringify(newThread),
     })
-    .then(response => response.json())
-    .then(updatedHotel => {
-      setHotels(hotels => {
-        return hotels.map(hotel => {
-          if(hotel.id === updatedHotel.id){
-            return updatedHotel
-          }
-          else{
-            return hotel
-          }
-        })
-      })
+      .then(response => response.json())
+      .then(newThread => setThreads(threads => [...threads, newThread]))
+  }
+
+  const { schoolname } = useParams();
+  const universityId = universities.find((uni) => uni.university_name === schoolname)?.id;
+
+  // make post stuff
+  const [posts, setPosts] = useState([]);
+
+  function addPost(newPost, schoolname, threadId) {
+    fetch(`/${schoolname}/threads/${threadId}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(newPost),
+    })
+      .then(response => response.json())
+      .then(newPost => setPosts(posts => [...posts, newPost]));
+  }
+
+  // login stuff
+  const [currentUser, setCurrentUser] = useState(null)
+
+  useEffect(() => {
+    fetch('/current_session')
+    .then(res => {
+      if (res.ok) {
+        res.json()
+        .then(user => setCurrentUser(user))
+      }
+    })
+  }, [])
+
+  function attemptLogin(userInfo) {
+    fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accepts': 'application/json'
+      },
+      body: JSON.stringify(userInfo)
+    })
+    .then(res => {
+      if (res.ok) {
+        res.json()
+        .then(user => setCurrentUser(user))
+      }
     })
   }
 
-  function deleteHotel(id){
-    fetch(`/hotels/${id}`, {
-      method: "DELETE"
+  function attemptSignup(userInfo) {
+    fetch('/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accepts': 'application/json'
+      },
+      body: JSON.stringify(userInfo)
     })
-    .then(() => setHotels(hotels => {
-      return hotels.filter(hotel => {
-        return hotel.id !== id
-      })
-    }))
+    .then(res => {
+      if (res.ok) {
+        res.json()
+        .then(user => setCurrentUser(user))
+      }
+    })
   }
 
-  function updatePostFormData(event){
-    setPostFormData({...postFormData, [event.target.name]: event.target.value})
-  }
-
-  function updatePatchFormData(event){
-    setPatchFormData({...patchFormData, [event.target.name]: event.target.value})
+  function logout() {
+    setCurrentUser(null)
+    fetch('/logout', { method: 'DELETE' })
   }
 
   return (
     <div className="app">
-      <NavBar/>
+      <NavBar />
       <Header />
       <Switch>
         <Route exact path="/">
-          <h1>Welcome! Here is the list of hotels available:</h1>
-          <HotelList hotels={hotels} deleteHotel={deleteHotel}/>
+          <h1>/explore topics:</h1>
+          <FeaturedThreads universities={universities}/>
+          <h1>/explore universities:</h1>
+
+          <UniversitiesList universities={universities} />
         </Route>
-        <Route path="/add_hotel">
-          <NewHotelForm addHotel={addHotel} updatePostFormData={updatePostFormData}/>
+        <Route path="/login">
+          
+        { !currentUser ? <Login attemptLogin={attemptLogin} /> : null }
+
+        { currentUser ? <UserDetails currentUser={currentUser} logout={logout} /> : null }
+
         </Route>
-        <Route path="/update_hotel">
-          <UpdateHotelForm updateHotel={updateHotel} setIdToUpdate={setIdToUpdate} updatePatchFormData={updatePatchFormData} hotels={hotels}/>
+        <Route path="/signup">
+
+        { !currentUser ? <Signup attemptSignup={attemptSignup} universities={universities} /> : null }
+
+        { currentUser ? <UserDetails currentUser={currentUser} logout={logout} /> : null }
+
+        </Route>
+        <Route path="/universities">
+          <UniversitiesList universities={universities} />
+        </Route>
+        <Route path="/add_university">
+          <NewUniversityForm addUniversity={addUniversity} updatePostUniFormData={updatePostUniFormData} postUniFormData={postUniFormData}/>
+        </Route>
+        <Route exact path="/:schoolname">
+          <div
+            className="schoolname-container"
+            style={{
+              backgroundColor: universities.find(uni => uni.university_name === schoolname)?.university_color,
+            }}
+          >
+            <Threads universities={universities} threads={threads} />
+            <AddThread universityId={universityId} addThread={addThread} />
+          </div>
+        </Route>
+        <Route exact path="/:schoolname/threads/:threadId/posts">
+          <Posts />
+          <AddPost addPost={addPost} />
         </Route>
       </Switch>
     </div>
