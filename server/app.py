@@ -91,6 +91,17 @@ class ThreadsByUniByID(Resource):
         thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
 
         return make_response(jsonify(thread.to_dict()), 200)
+    
+    def patch(self, schoolname, id):
+        university = University.query.filter_by(university_name=schoolname).first()
+        thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
+        
+        data = request.get_json()
+        for attr in data:
+            setattr(thread, attr, data[attr])
+        db.session.commit()
+        response_body = thread.to_dict()
+        return make_response(jsonify(response_body), 202)
 
     def delete(self, schoolname, id):
         university = University.query.filter_by(university_name=schoolname).first()
@@ -138,19 +149,20 @@ class PostByUniThread(Resource):
 
         if not thread or thread.university.university_name != schoolname:
             return jsonify({'message': 'Thread not found'}), 404
-        
-        user_id = check_session()  # Modify this line 
 
+        user_id = session["user_id"] 
+        
         user = User.query.filter_by(id=user_id).first()
-        # ipdb.set_trace()
+        
         if not user:
             return jsonify({'message': 'User not found'}), 404
 
         data = request.get_json()
-
+        
         new_post = Post(
             post_content=data['post_content'],
-            post_thread_id=thread.id
+            post_thread_id=thread.id,
+            post_user_id=user.id
         )
 
         db.session.add(new_post)
@@ -185,7 +197,6 @@ class PostByUniByID(Resource):
         data = request.get_json()
         for attr in data:
             setattr(post, attr, data[attr])
-        ipdb.set_trace()
         db.session.commit()
         response_body = post.to_dict()
         return make_response(jsonify(response_body), 202)
@@ -201,18 +212,31 @@ class PostByUniByID(Resource):
 
 api.add_resource(PostByUniByID, "/<string:schoolname>/threads/<int:threadId>/posts/<int:id>")
 
+class Users(Resource):
+    def get(self):
+        users = [user.to_dict() for user in User.query.all()]
+        return make_response(jsonify(users), 200)
+
+api.add_resource(Users, "/users")
+# USER SIGNUP #
+
+def get_current_user():
+    return User.query.where( User.id == session.get("user_id") ).first()
+
+def logged_in():
+    return bool( get_current_user() )
 
 # USER SIGNUP #
 
 @app.post('/users')
 def create_user():
     json = request.json
-    incoming_password = json['password']
-    hashed_password = bcrypt.generate_password_hash(incoming_password).decode('utf-8')
-    new_user = User( username=json['username'], password=hashed_password )
-    session['user_id'] = new_user.id
+    pw_hash = bcrypt.generate_password_hash(json['password']).decode('utf-8')
+    university_id = json['universityId']
+    new_user = User(username=json['username'], password=pw_hash, user_university_id=university_id)
     db.session.add(new_user)
     db.session.commit()
+    session['user_id'] = new_user.id
     return new_user.to_dict(), 201
 
 # SESSION LOGIN/LOGOUT#
@@ -220,29 +244,24 @@ def create_user():
 @app.post('/login')
 def login():
     json = request.json
-    user = User.query.filter(User.username == json['username']).first()
-    if user and bcrypt.check_password_hash( user.password, json['password'] ):
+    user = User.query.where(User.username == json["username"]).first()
+    if user and bcrypt.check_password_hash(user.password, json['password']):
         session['user_id'] = user.id
-        return user.to_dict(), 200
+        return user.to_dict(), 201
     else:
-        return { 'error': 'Invalid username or password' }, 401
+        return {'message': 'Invalid username or password'}, 401
 
-
-@app.get('/check_session')
+@app.get('/current_session')
 def check_session():
-    user_id = session.get('user_id')
-    user = User.query.filter(User.id == user_id).first()
-    if user:
-        return user.to_dict(), 200
+    if logged_in():
+        return get_current_user().to_dict(), 200
     else:
-        return {"message": "Not logged in"}, 401
-
-
+        return {}, 401
 
 @app.delete('/logout')
 def logout():
     session['user_id'] = None
-    return {"message": "Successfully logged out"}, 200
+    return {}, 204
 
 # MAKE CHECK-SESSION / LOGIN STUFF
 

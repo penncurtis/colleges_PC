@@ -45,7 +45,7 @@ class User(db.Model, SerializerMixin):
 
     posts = db.relationship('Post', backref='user')
 
-    user_university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
+    user_university_id = db.Column(db.Integer, db.ForeignKey('universities.id'))
 
     serialize_rules = ('-posts',)
     
