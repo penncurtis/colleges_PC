@@ -97,8 +97,10 @@ class ThreadsByUniByID(Resource):
         thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
         
         data = request.get_json()
-        for attr in data:
-            setattr(thread, attr, data[attr])
+        vote_value = data.get('thread_vote_count', 0)
+
+        thread.thread_vote_count += vote_value
+
         db.session.commit()
         response_body = thread.to_dict()
         return make_response(jsonify(response_body), 202)
@@ -143,6 +145,7 @@ class PostByUniThread(Resource):
         posts = [post.to_dict() for post in thread.posts]
 
         return make_response(jsonify(posts), 200)
+    
 
     def post(self, schoolname, threadId):
         thread = Thread.query.filter_by(id=threadId).first()
@@ -150,25 +153,27 @@ class PostByUniThread(Resource):
         if not thread or thread.university.university_name != schoolname:
             return jsonify({'message': 'Thread not found'}), 404
 
-        user_id = session["user_id"] 
-        
+        user_id = session["user_id"]
         user = User.query.filter_by(id=user_id).first()
-        
+
         if not user:
             return jsonify({'message': 'User not found'}), 404
 
         data = request.get_json()
-        
+
+        reply_post_id = data.get('reply_post_id')  # Get the ID of the post being replied to
+
         new_post = Post(
             post_content=data['post_content'],
             post_thread_id=thread.id,
-            post_user_id=user.id
+            post_user_id=user.id,
+            post_reply_id=reply_post_id  # Set the reply post ID
         )
 
         db.session.add(new_post)
         db.session.commit()
 
-        return jsonify({'message': 'Post created!'}, 201)
+        return make_response(jsonify({'message': 'Post created!'}), 201)
 
 api.add_resource(PostByUniThread, "/<string:schoolname>/threads/<int:threadId>/posts")
 

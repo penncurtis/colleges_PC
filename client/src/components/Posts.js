@@ -8,6 +8,8 @@ function Posts() {
   const [users, setUsers] = useState([]);
   const [universities, setUniversities] = useState([]);
   const [loggedInUser, setLoggedInUser] = useState(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [replyPostId, setReplyPostId] = useState(null);
 
   useEffect(() => {
     fetch(`/${schoolname}/threads/${threadId}`)
@@ -123,6 +125,66 @@ function Posts() {
     return null;
   };
 
+  const handleReply = (postId) => {
+    setReplyPostId(postId); // Set the ID of the post being replied to
+    setReplyContent(''); // Clear the reply content
+  };
+
+  const handleReplySubmit = () => {
+    // Send the reply content to the backend and handle the submission
+    const newPostData = {
+      post_content: replyContent,
+      reply_post_id: replyPostId, // Include the ID of the post being replied to
+    };
+
+    fetch(`/${schoolname}/threads/${threadId}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify(newPostData)
+    })
+    .then(response => {
+      if (response.ok) {
+        // Refresh the post list to show the new reply
+        fetch(`/${schoolname}/threads/${threadId}/posts?sort=vote_count`)
+          .then(response => response.json())
+          .then(data => setPosts(data))
+          .catch(error => console.log(error));
+        setReplyPostId(null); // Reset reply state after submission
+      } else {
+        console.log('Failed to create post');
+      }
+    })
+    .catch(error => console.log(error));
+  };
+
+  const renderPostReplies = (postId) => {
+    const replies = posts.filter((post) => post.reply_post_id === postId);
+  
+    if (replies.length === 0) {
+      return null;
+    }
+  
+    return (
+      <ul className="replies">
+        {replies.map((reply) => (
+          <li key={reply.id}>
+            <div className="user-info">
+              <p>s/ {getUser(reply.post_user_id)?.username}</p>
+              <p>u/ {getUser(reply.post_user_id)?.university_name}</p>
+            </div>
+            <div className="content">
+              <p>/{reply.post_content}</p>
+            </div>
+            {renderPostReplies(reply.id)} {/* Recursive call for nested replies */}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <div className="posts-container">
       <h1 style={{ color: thread && thread.university_color }}>
@@ -131,7 +193,7 @@ function Posts() {
       <ul>
         {posts.map(post => {
           const user = getUser(post.post_user_id);
-          const isCurrentUserPost = loggedInUser && loggedInUser.id === user.id;
+          const isCurrentUserPost = loggedInUser && user && loggedInUser.id === user.id;
   
           return (
             <li key={post.id}>
@@ -158,9 +220,9 @@ function Posts() {
               </div>
               <div className="actions">
                 <div className="votes">
+                  <button onClick={() => handleVote(post.id, 'up')}>&#8593;</button>
                   <span>{post.post_vote_count}</span>
-                  <button onClick={() => handleVote(post.id, 'up')}>&#x1F44D;</button>
-                  <button onClick={() => handleVote(post.id, 'down')}>&#x1F44E;</button>
+                  <button onClick={() => handleVote(post.id, 'down')}>&#8595;</button>
                 </div>
                 <div className="buttons">
                   {isCurrentUserPost && !post.isEditing && (
@@ -178,13 +240,27 @@ function Posts() {
                       Delete
                     </button>
                   )}
-                  {!isCurrentUserPost && <button className="reply">Reply</button>}
+                  {!isCurrentUserPost && (
+                    <button className="reply" onClick={() => handleReply(post.id)}>
+                      Reply
+                    </button>
+                  )}
                 </div>
               </div>
+              {renderPostReplies(post.id)}
             </li>
           );
         })}
       </ul>
+      {replyPostId && (
+        <div className="reply-box">
+          <textarea
+            value={replyContent}
+            onChange={e => setReplyContent(e.target.value)}
+          />
+          <button onClick={handleReplySubmit}>Submit</button>
+        </div>
+      )}
     </div>
   );  
 }

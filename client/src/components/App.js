@@ -14,6 +14,7 @@ import Signup from "./Signup"
 import UserDetails from "./UserDetails"
 import AddPost from './AddPost';
 import FeaturedThreads from './FeaturedThreads';
+import SearchUni from './SearchUni';
 
 function App() {
 
@@ -33,59 +34,68 @@ function App() {
   // add school stuff
   const [postUniFormData, setPostUniFormData] = useState({});
 
-  function addUniversity(event, formData){
-    event.preventDefault()
-
+  function addUniversity(event, formData) {
+    event.preventDefault();
+  
     fetch('/universities', {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify(formData),
     })
-    .then(response => response.json())
-    .then(newUni => setUniversities(universities => [...universities, newUni]))
+      .then(response => response.json())
+      .then(newUni => {
+        setUniversities(universities => [...universities, newUni]);
+        window.location.reload(); // Refresh the page
+      });
   }
-
-  function updatePostUniFormData(event){
-    setPostUniFormData({...postUniFormData, [event.target.name]: event.target.value})
+  
+  function updatePostUniFormData(event) {
+    setPostUniFormData({ ...postUniFormData, [event.target.name]: event.target.value });
   }
-
+  
   // make thread stuff
   const [threads, setThreads] = useState([]);
-
+  
   function addThread(newThread, schoolname) {
     fetch(`/${schoolname}/threads`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify(newThread),
     })
       .then(response => response.json())
-      .then(newThread => setThreads(threads => [...threads, newThread]))
+      .then(newThread => {
+        setThreads(threads => [...threads, newThread]);
+        window.location.reload(); // Refresh the page
+      });
   }
-
+  
   const { schoolname } = useParams();
-  const universityId = universities.find((uni) => uni.university_name === schoolname)?.id;
-
+  const universityId = universities.find(uni => uni.university_name === schoolname)?.id;
+  
   // make post stuff
   const [posts, setPosts] = useState([]);
-
+  
   function addPost(newPost, schoolname, threadId) {
     fetch(`/${schoolname}/threads/${threadId}/posts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify(newPost),
     })
       .then(response => response.json())
-      .then(newPost => setPosts(posts => [...posts, newPost]));
-  }
+      .then(newPost => {
+        setPosts(posts => [...posts, newPost]);
+        window.location.reload(); // Refresh the page
+      });
+  }  
 
   // login stuff
   const [currentUser, setCurrentUser] = useState(null)
@@ -139,6 +149,21 @@ function App() {
     fetch('/logout', { method: 'DELETE' })
   }
 
+  // college search stuff
+
+  const [searchUni, setSearchUni] = useState('')
+
+  function searchUniversities(e) {
+    setSearchUni(e.target.value)
+  }
+
+  const filteredUniversities = universities.filter(university => {
+    if (searchUni === '') {
+      return true
+    }
+    return university.university_name.toLowerCase().includes(searchUni.toLowerCase())
+  })
+
   return (
     <div className="app">
       <NavBar />
@@ -166,7 +191,8 @@ function App() {
 
         </Route>
         <Route path="/universities">
-          <UniversitiesList universities={universities} />
+          <SearchUni searchUniversities={searchUniversities} searchUni={searchUni}/>
+          <UniversitiesList universities={filteredUniversities} />
         </Route>
         <Route path="/add_university">
           <NewUniversityForm addUniversity={addUniversity} updatePostUniFormData={updatePostUniFormData} postUniFormData={postUniFormData}/>
