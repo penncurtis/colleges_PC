@@ -206,9 +206,12 @@ class PostByUniByID(Resource):
         thread = Thread.query.filter_by(id=threadId, thread_university_id=university.id).first()
         post = Post.query.filter_by(id=id, post_thread_id=thread.id).first()
 
+        if not post:
+            return {'errors': "Post not found"}, 404
+
         db.session.delete(post)
         db.session.commit()
-        return jsonify({'message': 'Post deleted successfully'})
+        return make_response(jsonify({'message': 'Post deleted successfully'}), 204)
 
 api.add_resource(PostByUniByID, "/<string:schoolname>/threads/<int:threadId>/posts/<int:id>")
 

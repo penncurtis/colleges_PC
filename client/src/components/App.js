@@ -148,7 +148,7 @@ function App() {
           <h1>/explore topics:</h1>
           <FeaturedThreads universities={universities}/>
           <h1>/explore universities:</h1>
-
+          {/* <Threads threads={threads} /> */}
           <UniversitiesList universities={universities} />
         </Route>
         <Route path="/login">
