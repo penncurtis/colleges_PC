@@ -24,45 +24,51 @@ function Signup({ attemptSignup, universities }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        onChange={handleChangeUsername}
-        value={username}
-        placeholder="username"
-        required
-      />
+    <div className="signup-container">
+      <div className="signup-box">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            onChange={handleChangeUsername}
+            value={username}
+            placeholder="username"
+            required
+          />
 
-      <input
-        type="password"
-        onChange={handleChangePassword}
-        value={password}
-        placeholder="password"
-        required
-      />
+          <input
+            type="password"
+            onChange={handleChangePassword}
+            value={password}
+            placeholder="password"
+            required
+          />
 
-      <input
-        type="password"
-        onChange={handleChangeConfirmPassword}
-        value={confirmPassword}
-        placeholder="confirm password"
-        required
-      />
+          <input
+            type="password"
+            onChange={handleChangeConfirmPassword}
+            value={confirmPassword}
+            placeholder="confirm password"
+            required
+          />
 
-      {passwordMatchError && (
-        <p style={{ color: 'red' }}>Passwords do not match!</p>
-      )}
+          {passwordMatchError && <p>Passwords do not match!</p>}
 
-      <select value={selectedUniversity} onChange={handleUniversityChange} placeholder={"select your university"} required >
-        {universities.map(university => {
-            return <option key={universities.id} value={university.id}>{university.university_name}</option>
-        })}
-      </select>
+          <select value={selectedUniversity} onChange={handleUniversityChange} required>
+            <option value="" disabled>
+              Select your university
+            </option>
+            {universities.map((university) => (
+              <option key={university.id} value={university.id}>
+                {university.university_name}
+              </option>
+            ))}
+          </select>
 
-      <input type="submit" value="Signup" />
-    </form>
+          <input type="submit" value="Signup" />
+        </form>
+      </div>
+    </div>
   );
 }
 
 export default Signup;
-

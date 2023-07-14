@@ -19,28 +19,30 @@ function Login({ attemptLogin }) {
   }
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          onChange={handleChangeUsername}
-          value={username}
-          placeholder="username"
-        />
+    <div className="login-container">
+      <div className="login-box">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            onChange={handleChangeUsername}
+            value={username}
+            placeholder="username"
+          />
 
-        <input
-          type="text"
-          onChange={handleChangePassword}
-          value={password}
-          placeholder="password"
-        />
+          <input
+            type="password"
+            onChange={handleChangePassword}
+            value={password}
+            placeholder="password"
+          />
 
-        <input type="submit" value="Login" />
-      </form>
+          <input type="submit" value="Login" />
+        </form>
 
-      <button onClick={() => setRedirectToSignup(true)}>
-        Don't have an account? Signup here
-      </button>
+        <button onClick={() => setRedirectToSignup(true)}>
+          Don't have an account? Signup here
+        </button>
+      </div>
     </div>
   );
 }

@@ -196,7 +196,15 @@ function Posts() {
   const renderPostWithReplies = (post) => {
     const user = getUser(post.post_user_id);
     const isCurrentUserPost = loggedInUser && user && loggedInUser.id === user.id;
-
+  
+    const handleVoteClick = (postId, voteType) => {
+      if (loggedInUser) {
+        handleVote(postId, voteType);
+      } else {
+        setRedirectToLogin(true);
+      }
+    };
+  
     return (
       <li key={post.id}>
         <div className="user-info">
@@ -207,9 +215,9 @@ function Posts() {
           {post.isEditing ? (
             <textarea
               value={post.post_content}
-              onChange={e => {
+              onChange={(e) => {
                 const updatedPosts = [...posts];
-                const postIndex = updatedPosts.findIndex(p => p.id === post.id);
+                const postIndex = updatedPosts.findIndex((p) => p.id === post.id);
                 if (postIndex !== -1) {
                   updatedPosts[postIndex].post_content = e.target.value;
                   setPosts(updatedPosts);
@@ -224,10 +232,17 @@ function Posts() {
           <div className="votes">
             {loggedInUser && (
               <>
-                <button onClick={() => handleVote(post.id, 'up')}>&#8593;</button>
+                <button onClick={() => handleVoteClick(post.id, 'up')}>&#8593;</button>
                 <span>{post.post_vote_count}</span>
-                <button onClick={() => handleVote(post.id, 'down')}>&#8595;</button>
+                <button onClick={() => handleVoteClick(post.id, 'down')}>&#8595;</button>
               </>
+            )}
+            {!loggedInUser && (
+              <div className="vote-placeholder">
+                <button onClick={() => setRedirectToLogin(true)}>&#8593;</button>
+                <span>{post.post_vote_count}</span>
+                <button onClick={() => setRedirectToLogin(true)}>&#8595;</button>
+              </div>
             )}
           </div>
           <div className="buttons">
@@ -255,23 +270,18 @@ function Posts() {
                 )}
               </>
             ) : (
-                <div className='votes'>
-                <button onClick={() => setRedirectToLogin(true)}>&#8593;</button>
-                    <span>{post.post_vote_count}</span>
-                <button onClick={() => setRedirectToLogin(true)}>&#8595;</button>
-                <div/>
-                <div>
-                <button className="reply" onClick={() => setRedirectToLogin(true)}>
+              <>
+                <button className="reply login" onClick={() => setRedirectToLogin(true)}>
                   Reply
                 </button>
-                <div/>
+              </>
             )}
           </div>
         </div>
         {/* Render replies */}
         {post.replies && post.replies.length > 0 && (
           <ul className="replies">
-            {post.replies.map(reply => (
+            {post.replies.map((reply) => (
               <li key={reply.id}>
                 <div className="user-info">
                   <p>s/ {getUser(reply.post_user_id)?.username}</p>
@@ -286,7 +296,7 @@ function Posts() {
         )}
       </li>
     );
-  };
+  };  
 
   if (redirectToLogin) {
     return <Redirect to="/login" />;

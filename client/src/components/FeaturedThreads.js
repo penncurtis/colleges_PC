@@ -26,7 +26,7 @@ function FeaturedThreads({ universities }) {
 
   return (
     <div className="schoolname-container">
-      <div className="featured-threads-container" style={{ backgroundColor: 'white' }}>
+      <div className="featured-threads-container">
         <ul>
         {sortedThreads.map(thread => {
             const university = universities.find(uni => uni.id === thread.thread_university_id);
