@@ -2,12 +2,13 @@
 
 import ipdb
 
-from flask import Flask, make_response, jsonify, request, session, g
+from flask import Flask, make_response, jsonify, request, session, g, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
+from functools import wraps
 
 from models import db, University, Thread, User, Post
 
@@ -27,12 +28,21 @@ CORS(app)
 
 api = Api(app)
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('user_id') is None:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
 class Universities(Resource):
 
     def get(self):
         universities = [university.to_dict() for university in University.query.all()]
         return make_response(jsonify(universities), 200)
     
+    @login_required
     def post(self):
         data = request.get_json()
         university = University(
@@ -69,6 +79,7 @@ class ThreadsByUniversity(Resource):
         # ipdb.set_trace()
         return make_response(jsonify(threads), 200)
 
+    @login_required
     def post(self, schoolname):
         data = request.get_json()
         
@@ -92,6 +103,7 @@ class ThreadsByUniByID(Resource):
 
         return make_response(jsonify(thread.to_dict()), 200)
     
+    @login_required
     def patch(self, schoolname, id):
         university = University.query.filter_by(university_name=schoolname).first()
         thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
@@ -105,6 +117,7 @@ class ThreadsByUniByID(Resource):
         response_body = thread.to_dict()
         return make_response(jsonify(response_body), 202)
 
+    @login_required
     def delete(self, schoolname, id):
         university = University.query.filter_by(university_name=schoolname).first()
         thread = Thread.query.filter_by(id=id, thread_university_id=university.id).first()
@@ -120,6 +133,7 @@ class Posts(Resource):
         posts = [post.to_dict() for post in Post.query.all()]
         return make_response(jsonify(posts), 200)
     
+    @login_required
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(id=data['post_user_id']).first().to_dict()
@@ -146,7 +160,7 @@ class PostByUniThread(Resource):
 
         return make_response(jsonify(posts), 200)
     
-
+    @login_required
     def post(self, schoolname, threadId):
         thread = Thread.query.filter_by(id=threadId).first()
 
@@ -194,6 +208,7 @@ class PostByUniByID(Resource):
 
         return make_response(jsonify(post.to_dict()) if post else {'errors': "Post not found"}, 200)
 
+    @login_required
     def patch(self, schoolname, threadId, id):
         university = University.query.filter_by(university_name=schoolname).first()
         thread = Thread.query.filter_by(id=threadId, thread_university_id=university.id).first()
@@ -206,6 +221,7 @@ class PostByUniByID(Resource):
         response_body = post.to_dict()
         return make_response(jsonify(response_body), 202)
 
+    @login_required
     def delete(self, schoolname, threadId, id):
         university = University.query.filter_by(university_name=schoolname).first()
         thread = Thread.query.filter_by(id=threadId, thread_university_id=university.id).first()
@@ -236,6 +252,10 @@ def logged_in():
 
 # USER SIGNUP #
 
+@app.route('/login', methods=['GET'])
+def login_page():
+    return "Login Page"  # Replace with your actual login page HTML or template
+
 @app.post('/users')
 def create_user():
     json = request.json
@@ -247,8 +267,6 @@ def create_user():
     session['user_id'] = new_user.id
     return new_user.to_dict(), 201
 
-# SESSION LOGIN/LOGOUT#
-
 @app.post('/login')
 def login():
     json = request.json
@@ -259,12 +277,12 @@ def login():
     else:
         return {'message': 'Invalid username or password'}, 401
 
-@app.get('/current_session')
+@app.route('/current_session', methods=['GET'])
 def check_session():
     if logged_in():
         return get_current_user().to_dict(), 200
     else:
-        return {}, 401
+        return redirect('/login')
 
 @app.delete('/logout')
 def logout():

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Redirect } from 'react-router-dom';
 
 function Posts() {
   const { schoolname, threadId } = useParams();
@@ -10,6 +10,7 @@ function Posts() {
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [replyPostId, setReplyPostId] = useState(null);
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
 
   useEffect(() => {
     fetch(`/${schoolname}/threads/${threadId}`)
@@ -33,19 +34,29 @@ function Posts() {
       .catch(error => console.log(error));
 
     fetch(`/current_session`)
-        .then(response => response.json())
-        .then(data => setLoggedInUser(data))
-        .catch(error => console.log(error));
+      .then(response => response.json())
+      .then(data => {
+        setLoggedInUser(data);
+        if (!data) {
+          setRedirectToLogin(true);
+        }
+      })
+      .catch(error => console.log(error));
   }, [schoolname, threadId]);
 
   const handleVote = (postId, voteType) => {
+    if (!loggedInUser) {
+      setRedirectToLogin(true);
+      return;
+    }
+
     const voteValue = voteType === 'up' ? 1 : -1;
 
     fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       },
       body: JSON.stringify({ post_vote_count: voteValue }),
     })
@@ -62,13 +73,23 @@ function Posts() {
   };
 
   const handleEdit = (postId) => {
+    if (!loggedInUser) {
+      setRedirectToLogin(true);
+      return;
+    }
+
     const updatedPosts = posts.map(post =>
       post.id === postId ? { ...post, isEditing: true } : { ...post, isEditing: false }
     );
     setPosts(updatedPosts);
-  };  
-  
+  };
+
   const handleSave = (postId, newContent) => {
+    if (!loggedInUser) {
+      setRedirectToLogin(true);
+      return;
+    }
+
     const updatedPosts = [...posts];
     const postIndex = updatedPosts.findIndex(post => post.id === postId);
     if (postIndex !== -1) {
@@ -78,7 +99,7 @@ function Posts() {
         post_content: newContent
       };
       setPosts(updatedPosts);
-  
+
       const updatedPost = { post_content: newContent };
       fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`, {
         method: 'PATCH',
@@ -95,10 +116,14 @@ function Posts() {
         })
         .catch(error => console.log(error));
     }
-  };  
-  
+  };
 
   const handleDelete = (postId) => {
+    if (!loggedInUser) {
+      setRedirectToLogin(true);
+      return;
+    }
+
     fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`, {
       method: 'DELETE',
     })
@@ -111,7 +136,7 @@ function Posts() {
         }
       })
       .catch(error => console.log(error));
-  };  
+  };
 
   const getUser = (userId) => {
     const user = users.find(user => user.id === userId);
@@ -126,15 +151,24 @@ function Posts() {
   };
 
   const handleReply = (postId) => {
-    setReplyPostId(postId); // Set the ID of the post being replied to
-    setReplyContent(''); // Clear the reply content
+    if (!loggedInUser) {
+      setRedirectToLogin(true);
+      return;
+    }
+
+    setReplyPostId(postId);
+    setReplyContent('');
   };
 
   const handleReplySubmit = () => {
-    // Send the reply content to the backend and handle the submission
+    if (!loggedInUser) {
+      setRedirectToLogin(true);
+      return;
+    }
+
     const newPostData = {
       post_content: replyContent,
-      reply_post_id: replyPostId, // Include the ID of the post being replied to
+      reply_post_id: replyPostId,
     };
 
     fetch(`/${schoolname}/threads/${threadId}/posts`, {
@@ -145,124 +179,134 @@ function Posts() {
       },
       body: JSON.stringify(newPostData)
     })
-    .then(response => {
-      if (response.ok) {
-        // Refresh the post list to show the new reply
-        fetch(`/${schoolname}/threads/${threadId}/posts?sort=vote_count`)
-          .then(response => response.json())
-          .then(data => setPosts(data))
-          .catch(error => console.log(error));
-        setReplyPostId(null); // Reset reply state after submission
-      } else {
-        console.log('Failed to create post');
-      }
-    })
-    .catch(error => console.log(error));
+      .then(response => {
+        if (response.ok) {
+          fetch(`/${schoolname}/threads/${threadId}/posts?sort=vote_count`)
+            .then(response => response.json())
+            .then(data => setPosts(data))
+            .catch(error => console.log(error));
+          setReplyPostId(null);
+        } else {
+          console.log('Failed to create post');
+        }
+      })
+      .catch(error => console.log(error));
   };
 
-  const renderPostReplies = (postId) => {
-    const replies = posts.filter((post) => post.reply_post_id === postId);
-  
-    if (replies.length === 0) {
-      return null;
-    }
-  
+  const renderPostWithReplies = (post) => {
+    const user = getUser(post.post_user_id);
+    const isCurrentUserPost = loggedInUser && user && loggedInUser.id === user.id;
+
     return (
-      <ul className="replies">
-        {replies.map((reply) => (
-          <li key={reply.id}>
-            <div className="user-info">
-              <p>s/ {getUser(reply.post_user_id)?.username}</p>
-              <p>u/ {getUser(reply.post_user_id)?.university_name}</p>
-            </div>
-            <div className="content">
-              <p>/{reply.post_content}</p>
-            </div>
-            {renderPostReplies(reply.id)} {/* Recursive call for nested replies */}
-          </li>
-        ))}
-      </ul>
+      <li key={post.id}>
+        <div className="user-info">
+          <p>s/ {user ? user.username : ''}</p>
+          <p>u/ {user ? user.university_name : ''}</p>
+        </div>
+        <div className="content">
+          {post.isEditing ? (
+            <textarea
+              value={post.post_content}
+              onChange={e => {
+                const updatedPosts = [...posts];
+                const postIndex = updatedPosts.findIndex(p => p.id === post.id);
+                if (postIndex !== -1) {
+                  updatedPosts[postIndex].post_content = e.target.value;
+                  setPosts(updatedPosts);
+                }
+              }}
+            />
+          ) : (
+            <p>/{post.post_content}</p>
+          )}
+        </div>
+        <div className="actions">
+          <div className="votes">
+            {loggedInUser && (
+              <>
+                <button onClick={() => handleVote(post.id, 'up')}>&#8593;</button>
+                <span>{post.post_vote_count}</span>
+                <button onClick={() => handleVote(post.id, 'down')}>&#8595;</button>
+              </>
+            )}
+          </div>
+          <div className="buttons">
+            {loggedInUser ? (
+              <>
+                {isCurrentUserPost && !post.isEditing && (
+                  <button className="edit" onClick={() => handleEdit(post.id)}>
+                    Edit
+                  </button>
+                )}
+                {isCurrentUserPost && post.isEditing && (
+                  <button className="save" onClick={() => handleSave(post.id, post.post_content)}>
+                    Save
+                  </button>
+                )}
+                {isCurrentUserPost && (
+                  <button className="delete" onClick={() => handleDelete(post.id)}>
+                    Delete
+                  </button>
+                )}
+                {!isCurrentUserPost && (
+                  <button className="reply" onClick={() => handleReply(post.id)}>
+                    Reply
+                  </button>
+                )}
+              </>
+            ) : (
+                <div className='votes'>
+                <button onClick={() => setRedirectToLogin(true)}>&#8593;</button>
+                    <span>{post.post_vote_count}</span>
+                <button onClick={() => setRedirectToLogin(true)}>&#8595;</button>
+                <div/>
+                <div>
+                <button className="reply" onClick={() => setRedirectToLogin(true)}>
+                  Reply
+                </button>
+                <div/>
+            )}
+          </div>
+        </div>
+        {/* Render replies */}
+        {post.replies && post.replies.length > 0 && (
+          <ul className="replies">
+            {post.replies.map(reply => (
+              <li key={reply.id}>
+                <div className="user-info">
+                  <p>s/ {getUser(reply.post_user_id)?.username}</p>
+                  <p>u/ {getUser(reply.post_user_id)?.university_name}</p>
+                </div>
+                <div className="content">
+                  <p>/{reply.post_content}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </li>
     );
   };
+
+  if (redirectToLogin) {
+    return <Redirect to="/login" />;
+  }
 
   return (
     <div className="posts-container">
       <h1 style={{ color: thread && thread.university_color }}>
         Thread: {thread ? thread.thread_title : ''}
       </h1>
-      <ul>
-        {posts.map(post => {
-          const user = getUser(post.post_user_id);
-          const isCurrentUserPost = loggedInUser && user && loggedInUser.id === user.id;
-  
-          return (
-            <li key={post.id}>
-              <div className="user-info">
-                <p>s/ {user ? user.username : ''}</p>
-                <p>u/ {user ? user.university_name : ''}</p>
-              </div>
-              <div className="content">
-                {post.isEditing ? (
-                  <textarea
-                    value={post.post_content}
-                    onChange={e => {
-                      const updatedPosts = [...posts];
-                      const postIndex = updatedPosts.findIndex(p => p.id === post.id);
-                      if (postIndex !== -1) {
-                        updatedPosts[postIndex].post_content = e.target.value;
-                        setPosts(updatedPosts);
-                      }
-                    }}
-                  />
-                ) : (
-                  <p>/{post.post_content}</p>
-                )}
-              </div>
-              <div className="actions">
-                <div className="votes">
-                  <button onClick={() => handleVote(post.id, 'up')}>&#8593;</button>
-                  <span>{post.post_vote_count}</span>
-                  <button onClick={() => handleVote(post.id, 'down')}>&#8595;</button>
-                </div>
-                <div className="buttons">
-                  {isCurrentUserPost && !post.isEditing && (
-                    <button className="edit" onClick={() => handleEdit(post.id)}>
-                      Edit
-                    </button>
-                  )}
-                  {isCurrentUserPost && post.isEditing && (
-                    <button className="save" onClick={() => handleSave(post.id, post.post_content)}>
-                      Save
-                    </button>
-                  )}
-                  {isCurrentUserPost && (
-                    <button className="delete" onClick={() => handleDelete(post.id)}>
-                      Delete
-                    </button>
-                  )}
-                  {!isCurrentUserPost && (
-                    <button className="reply" onClick={() => handleReply(post.id)}>
-                      Reply
-                    </button>
-                  )}
-                </div>
-              </div>
-              {renderPostReplies(post.id)}
-            </li>
-          );
-        })}
-      </ul>
+      <ul>{posts.map(post => renderPostWithReplies(post))}</ul>
       {replyPostId && (
         <div className="reply-box">
-          <textarea
-            value={replyContent}
-            onChange={e => setReplyContent(e.target.value)}
-          />
+          <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} />
           <button onClick={handleReplySubmit}>Submit</button>
         </div>
       )}
     </div>
-  );  
+  );
 }
 
 export default Posts;
+
