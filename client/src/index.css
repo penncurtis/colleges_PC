@@ -182,7 +182,9 @@ input[type="text"]:focus {
   font-size: 1.8rem;
   text-align: center;
   margin-bottom: 1rem;
+  color: #fff; /* Set the font color to white */
 }
+
 
 .threads-container ul {
   padding: 0;
@@ -312,6 +314,7 @@ input[type="text"]:focus {
   font-size: 1.8rem;
   text-align: center;
   margin-bottom: 1rem;
+  color: #fff; /* Set the font color to white */
 }
 
 .posts-container ul {
@@ -457,9 +460,8 @@ input[type="text"]:focus {
 }
 
 .logo-container {
-  /* Adjust the desired width and height */
-  width: 200px;
-  height: 100px;
+  width: 100%; /* Set the width to 100% to span the entire width of the header */
+  height: auto; /* Let the height adjust automatically based on the logo dimensions */
 }
 
 .logo {
@@ -487,16 +489,19 @@ input[type="text"]:focus {
   font-family: 'Impact', sans-serif;
 }
 
+
 .featured-header-text .main-subtitle {
-  font-size: 2rem; /* Larger font size */
-  font-family: 'Courier New', monospace;
+  font-size: 4rem; /* Larger font size */
+  font-family: 'Verdana', monospace;
   font-style: italic; /* Italic style */
+  font-weight: bold;
 }
 
 .featured-header-text .tagline {
-  font-size: 1.5rem; /* Larger font size */
+  font-size: 2.5rem; /* Larger font size */
   font-family: 'Verdana', sans-serif;
   font-style: italic; /* Italic style */
+  font-weight: bold;
 }
 
 .featured-header-box {

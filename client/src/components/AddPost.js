@@ -1,12 +1,31 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Redirect } from 'react-router-dom';
 
 function AddPost({ addPost }) {
   const [postContent, setPostContent] = useState('');
   const { schoolname, threadId } = useParams();
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  useEffect(() => {
+    fetch(`/current_session`)
+      .then(response => response.json())
+      .then(data => {
+        setLoggedInUser(data);
+        if (!data) {
+          setRedirectToLogin(true);
+        }
+      })
+      .catch(error => console.log(error));
+    }, []);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    if (!loggedInUser) {
+        setRedirectToLogin(true);
+        return;
+    }
 
     const newPost = {
       post_content: postContent
@@ -19,6 +38,10 @@ function AddPost({ addPost }) {
   const handleInputChange = (event) => {
     setPostContent(event.target.value);
   };
+
+  if (redirectToLogin) {
+    return <Redirect to="/login" />;
+  }
 
   return (
     <div className='add-post-container'>

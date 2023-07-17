@@ -172,13 +172,13 @@ function App() {
         <Route exact path="/">
           <div className="featured-header-box">
             <div className="featured-header-text">
-              <p className="main-subtitle">Empowering Scholars, Navigating Success</p>
-              <p className="tagline">Unlock Your Academic Potential with Community Wisdom</p>
+              <p className="main-subtitle">// Empowering Scholars, Navigating Success</p>
+              <p className="tagline">// Unlock Your Academic Potential with Community Wisdom</p>
             </div>
           </div>
-          <h1>/explore topics:</h1>
+          <h1 style={{ fontSize: "3.5rem" }}>/explore topics:</h1>
           <FeaturedThreads universities={universities}/>
-          <h1>/explore universities:</h1>
+          <h1 style={{ fontSize: "3.5rem" }}>/explore universities:</h1>
           {/* <Threads threads={threads} /> */}
           <UniversitiesList universities={universities} />
         </Route>

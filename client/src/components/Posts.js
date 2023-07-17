@@ -32,7 +32,6 @@ function Posts() {
       .then(response => response.json())
       .then(data => setUsers(data))
       .catch(error => console.log(error));
-
     fetch(`/universities`)
       .then(response => response.json())
       .then(data => setUniversities(data))
@@ -75,22 +74,29 @@ function Posts() {
       setRedirectToLogin(true);
       return;
     }
-
+  
     const voteValue = voteType === 'up' ? 1 : -1;
-
-    fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify({ post_vote_count: voteValue }),
-    })
+  
+    fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`)
       .then(response => response.json())
-      .then(updatedPost => {
-        const updatedTree = [...postTree];
-        updateVoteCount(updatedTree, postId, updatedPost.post_vote_count);
-        setPostTree(updatedTree);
+      .then(post => {
+        const updatedVoteCount = post.post_vote_count + voteValue;
+  
+        fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+          },
+          body: JSON.stringify({ post_vote_count: updatedVoteCount }),
+        })
+          .then(response => response.json())
+          .then(updatedPost => {
+            const updatedTree = [...postTree];
+            updateVoteCount(updatedTree, postId, updatedPost.post_vote_count);
+            setPostTree(updatedTree);
+          })
+          .catch(error => console.log(error));
       })
       .catch(error => console.log(error));
   };
