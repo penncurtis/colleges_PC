@@ -256,6 +256,12 @@ input[type="text"]:focus {
   cursor: pointer;
 }
 
+.featured-schoolname-container {
+  background-color: transparent;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .featured-threads-container {
   padding: 1rem;
   background-color: transparent;
@@ -274,6 +280,7 @@ input[type="text"]:focus {
 
 .featured-threads-container li {
   margin-bottom: 1rem;
+  background-color: transparent;
 }
 
 .featured-threads-container li.thread {
@@ -281,7 +288,6 @@ input[type="text"]:focus {
   align-items: center;
   padding: 1rem;
   height: 120px;
-  background-color: transparent;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
@@ -299,7 +305,6 @@ input[type="text"]:focus {
 
 .posts-container {
   padding: 1rem;
-  background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -390,29 +395,122 @@ input[type="text"]:focus {
   margin-left: 1rem;
 }
 
-.posts-container li ul.replies li {
-  margin-left: 1rem;
+.posts-container li.reply-post {
+  background-color: #f5f5f5;
+  font-size: 0.9rem;
 }
 
-.header {
-  background-color: #000;
+.posts-container li.reply-post .content {
+  margin-bottom: 0.3rem;
+}
+
+.posts-container li.reply-post .parent-post-info {
+  margin-bottom: 0.5rem;
+}
+
+.posts-container li.regular-post {
+  font-size: 1rem;
+  background-color: #fff;
+}
+
+.posts-container li.regular-post .content {
+  margin-bottom: 0.5rem;
+}
+
+.posts-container li.regular-post .parent-post-info {
+  display: none;
+}
+
+.posts-container .reply-box {
+  margin-top: 10px;
+  padding: 6px;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+}
+
+.posts-container .reply-box textarea {
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 6px;
+  resize: vertical;
+}
+
+.posts-container .reply-box button {
+  padding: 4px 8px;
+  background-color: var(--primary-color);
   color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.posts-container .reply-box button:hover {
+  background-color: #0069d9;
+}
+
+.header-box {
+  width: 100%;
   padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-container {
+  /* Adjust the desired width and height */
+  width: 200px;
+  height: 100px;
+}
+
+.logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.header-text {
   text-align: center;
+  color: #000;
 }
 
-.header h1 {
-  font-size: 1.5rem;
+.header-text h1 {
+  font-size: 5rem;
   font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-family: 'Georgia', serif;
 }
 
-.header .logo {
-  font-size: 1.5rem;
-  margin-left: 0.5rem;
+.header-text .site-name {
+  font-size: 3rem;
+  font-family: 'Impact', sans-serif;
+}
+
+.featured-header-text .main-subtitle {
+  font-size: 2rem; /* Larger font size */
+  font-family: 'Courier New', monospace;
+  font-style: italic; /* Italic style */
+}
+
+.featured-header-text .tagline {
+  font-size: 1.5rem; /* Larger font size */
+  font-family: 'Verdana', sans-serif;
+  font-style: italic; /* Italic style */
+}
+
+.featured-header-box {
+  width: 100%;
+  padding: 1rem;
+}
+
+.featured-header-text {
+  text-align: center;
+  color: #000;
 }
 
 .navbar {
-  background-color: #f2f2f2;
+  background-color: transparent;
   padding: 1rem;
   display: flex;
   justify-content: space-between;
@@ -429,15 +527,21 @@ input[type="text"]:focus {
   text-decoration: none;
   font-weight: bold;
   padding: 0.5rem;
+  background-color: #fff;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .navbar-links a:hover {
   color: #333;
+  background-color: #f2f2f2;
 }
 
 .navbar-links .active-link {
   color: #333;
   border-bottom: 2px solid #333;
+  background-color: #fff;
+  border-radius: 4px;
 }
 
 .add-post-container {
@@ -562,4 +666,71 @@ input[type="text"]:focus {
   width: 80%;
   padding: 0.5rem;
   font-size: 1.2rem;
+}
+
+.new-university-form-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.new-university-form-container h1,
+.new-university-form-container h2 {
+  margin-bottom: 1rem;
+}
+
+.new-university-form-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.new-university-form-container input {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+}
+
+.new-university-form-container input[type="submit"] {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.new-university-form-container input[type="submit"]:hover {
+  background-color: #0093c4;
+}
+
+.user-details-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.user-details-container h2 {
+  margin-bottom: 1rem;
+}
+
+.user-details-container button {
+  background-color: transparent;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.user-details-container button:hover {
+  text-decoration: underline;
 }

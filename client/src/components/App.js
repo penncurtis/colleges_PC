@@ -170,6 +170,12 @@ function App() {
       <Header />
       <Switch>
         <Route exact path="/">
+          <div className="featured-header-box">
+            <div className="featured-header-text">
+              <p className="main-subtitle">Empowering Scholars, Navigating Success</p>
+              <p className="tagline">Unlock Your Academic Potential with Community Wisdom</p>
+            </div>
+          </div>
           <h1>/explore topics:</h1>
           <FeaturedThreads universities={universities}/>
           <h1>/explore universities:</h1>
@@ -209,7 +215,7 @@ function App() {
           </div>
         </Route>
         <Route exact path="/:schoolname/threads/:threadId/posts">
-          <Posts />
+          <Posts universities={universities} />
           <AddPost addPost={addPost} />
         </Route>
       </Switch>

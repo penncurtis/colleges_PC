@@ -25,7 +25,7 @@ function FeaturedThreads({ universities }) {
   };
 
   return (
-    <div className="schoolname-container">
+    <div className="featured-schoolname-container">
       <div className="featured-threads-container">
         <ul>
         {sortedThreads.map(thread => {

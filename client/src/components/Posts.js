@@ -4,13 +4,14 @@ import { useParams, Redirect } from 'react-router-dom';
 function Posts() {
   const { schoolname, threadId } = useParams();
   const [thread, setThread] = useState(null);
-  const [posts, setPosts] = useState([]);
+  const [postTree, setPostTree] = useState([]);
   const [users, setUsers] = useState([]);
   const [universities, setUniversities] = useState([]);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [replyPostId, setReplyPostId] = useState(null);
   const [redirectToLogin, setRedirectToLogin] = useState(false);
+  const universityColor = universities.find((uni) => uni.university_name === schoolname)?.university_color;
 
   useEffect(() => {
     fetch(`/${schoolname}/threads/${threadId}`)
@@ -20,7 +21,11 @@ function Posts() {
 
     fetch(`/${schoolname}/threads/${threadId}/posts?sort=vote_count`)
       .then(response => response.json())
-      .then(data => setPosts(data))
+      .then(data => {
+        // Organize posts into a tree structure
+        const tree = buildPostTree(data);
+        setPostTree(tree);
+      })
       .catch(error => console.log(error));
 
     fetch(`/users`)
@@ -44,6 +49,27 @@ function Posts() {
       .catch(error => console.log(error));
   }, [schoolname, threadId]);
 
+  const buildPostTree = (posts) => {
+    const postMap = {};
+    const tree = [];
+
+    posts.forEach(post => {
+      post.replies = [];
+      postMap[post.id] = post;
+
+      if (!post.post_reply_id) {
+        tree.push(post);
+      } else {
+        const parentPost = postMap[post.post_reply_id];
+        if (parentPost) {
+          parentPost.replies.push(post);
+        }
+      }
+    });
+
+    return tree;
+  };
+
   const handleVote = (postId, voteType) => {
     if (!loggedInUser) {
       setRedirectToLogin(true);
@@ -62,14 +88,24 @@ function Posts() {
     })
       .then(response => response.json())
       .then(updatedPost => {
-        const updatedPosts = posts.map(post =>
-          post.id === updatedPost.id
-            ? { ...post, post_vote_count: post.post_vote_count + parseInt(voteValue) }
-            : post
-        );
-        setPosts(updatedPosts);
+        const updatedTree = [...postTree];
+        updateVoteCount(updatedTree, postId, updatedPost.post_vote_count);
+        setPostTree(updatedTree);
       })
       .catch(error => console.log(error));
+  };
+
+  const updateVoteCount = (tree, postId, voteCount) => {
+    for (let i = 0; i < tree.length; i++) {
+      const post = tree[i];
+      if (post.id === postId) {
+        post.post_vote_count = voteCount;
+        return;
+      }
+      if (post.replies && post.replies.length > 0) {
+        updateVoteCount(post.replies, postId, voteCount);
+      }
+    }
   };
 
   const handleEdit = (postId) => {
@@ -78,10 +114,22 @@ function Posts() {
       return;
     }
 
-    const updatedPosts = posts.map(post =>
-      post.id === postId ? { ...post, isEditing: true } : { ...post, isEditing: false }
-    );
-    setPosts(updatedPosts);
+    const updatedTree = [...postTree];
+    updatePostEditingStatus(updatedTree, postId, true);
+    setPostTree(updatedTree);
+  };
+
+  const updatePostEditingStatus = (tree, postId, isEditing) => {
+    for (let i = 0; i < tree.length; i++) {
+      const post = tree[i];
+      if (post.id === postId) {
+        post.isEditing = isEditing;
+        return;
+      }
+      if (post.replies && post.replies.length > 0) {
+        updatePostEditingStatus(post.replies, postId, isEditing);
+      }
+    }
   };
 
   const handleSave = (postId, newContent) => {
@@ -90,24 +138,21 @@ function Posts() {
       return;
     }
 
-    const updatedPosts = [...posts];
-    const postIndex = updatedPosts.findIndex(post => post.id === postId);
-    if (postIndex !== -1) {
-      updatedPosts[postIndex] = {
-        ...updatedPosts[postIndex],
-        isEditing: false,
-        post_content: newContent
-      };
-      setPosts(updatedPosts);
+    const updatedTree = [...postTree];
+    const updatedPost = findPostById(updatedTree, postId);
+    if (updatedPost) {
+      updatedPost.isEditing = false;
+      updatedPost.post_content = newContent;
+      setPostTree(updatedTree);
 
-      const updatedPost = { post_content: newContent };
+      const updatedData = { post_content: newContent };
       fetch(`/${schoolname}/threads/${threadId}/posts/${postId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },
-        body: JSON.stringify(updatedPost)
+        body: JSON.stringify(updatedData)
       })
         .then(response => {
           if (!response.ok) {
@@ -116,6 +161,22 @@ function Posts() {
         })
         .catch(error => console.log(error));
     }
+  };
+
+  const findPostById = (tree, postId) => {
+    for (let i = 0; i < tree.length; i++) {
+      const post = tree[i];
+      if (post.id === postId) {
+        return post;
+      }
+      if (post.replies && post.replies.length > 0) {
+        const foundPost = findPostById(post.replies, postId);
+        if (foundPost) {
+          return foundPost;
+        }
+      }
+    }
+    return null;
   };
 
   const handleDelete = (postId) => {
@@ -129,13 +190,24 @@ function Posts() {
     })
       .then(response => {
         if (response.status === 204) {
-          const updatedPosts = posts.filter(post => post.id !== postId);
-          setPosts(updatedPosts);
+          const updatedTree = removePostById(postTree, postId);
+          setPostTree(updatedTree);
         } else {
           console.log('Failed to delete post');
         }
       })
       .catch(error => console.log(error));
+  };
+
+  const removePostById = (tree, postId) => {
+    const updatedTree = tree.filter(post => post.id !== postId);
+    for (let i = 0; i < updatedTree.length; i++) {
+      const post = updatedTree[i];
+      if (post.replies && post.replies.length > 0) {
+        post.replies = removePostById(post.replies, postId);
+      }
+    }
+    return updatedTree;
   };
 
   const getUser = (userId) => {
@@ -183,7 +255,10 @@ function Posts() {
         if (response.ok) {
           fetch(`/${schoolname}/threads/${threadId}/posts?sort=vote_count`)
             .then(response => response.json())
-            .then(data => setPosts(data))
+            .then(data => {
+              const updatedTree = buildPostTree(data);
+              setPostTree(updatedTree);
+            })
             .catch(error => console.log(error));
           setReplyPostId(null);
         } else {
@@ -205,8 +280,100 @@ function Posts() {
       }
     };
   
+    const parentPost = post.post_reply_id ? findPostById(postTree, post.post_reply_id) : null;
+    const parentUser = parentPost ? getUser(parentPost.post_user_id) : null;
+  
+    if (parentPost) {
+      return (
+        <li key={post.id} className="reply-post">
+          <div className="user-info">
+            <p>s/ {user ? user.username : ''}</p>
+            <p>u/ {user ? user.university_name : ''}</p>
+          </div>
+          <div className="content">
+            {post.isEditing ? (
+              <textarea
+                value={post.post_content}
+                onChange={(e) => {
+                  const updatedTree = [...postTree];
+                  const updatedPost = findPostById(updatedTree, post.id);
+                  if (updatedPost) {
+                    updatedPost.post_content = e.target.value;
+                    setPostTree(updatedTree);
+                  }
+                }}
+              />
+            ) : (
+              <p>/{post.post_content}</p>
+            )}
+          </div>
+          <div className="actions">
+            <div className="votes">
+              {loggedInUser && (
+                <>
+                  <button onClick={() => handleVoteClick(post.id, 'up')}>&#8593;</button>
+                  <span>{post.post_vote_count}</span>
+                  <button onClick={() => handleVoteClick(post.id, 'down')}>&#8595;</button>
+                </>
+              )}
+              {!loggedInUser && (
+                <div className="vote-placeholder">
+                  <button onClick={() => setRedirectToLogin(true)}>&#8593;</button>
+                  <span>{post.post_vote_count}</span>
+                  <button onClick={() => setRedirectToLogin(true)}>&#8595;</button>
+                </div>
+              )}
+            </div>
+            <div className="buttons">
+              {loggedInUser ? (
+                <>
+                  {isCurrentUserPost && !post.isEditing && (
+                    <button className="edit" onClick={() => handleEdit(post.id)}>
+                      Edit
+                    </button>
+                  )}
+                  {isCurrentUserPost && post.isEditing && (
+                    <button className="save" onClick={() => handleSave(post.id, post.post_content)}>
+                      Save
+                    </button>
+                  )}
+                  {isCurrentUserPost && (
+                    <button className="delete" onClick={() => handleDelete(post.id)}>
+                      Delete
+                    </button>
+                  )}
+                  {!isCurrentUserPost && (
+                    <button className="reply" onClick={() => handleReply(post.id)}>
+                      Reply
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button className="reply login" onClick={() => setRedirectToLogin(true)}>
+                    Reply
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="parent-post-info">
+            <p>Reply to:</p>
+            <p>s/ {parentUser ? parentUser.username : ''} u/ {parentUser ? parentUser.university_name : ''}</p>
+            <p>/{parentPost.post_content}</p>
+          </div>
+          {post.replies.length > 0 && (
+            <ul className="replies">
+              {post.replies.map((reply) => renderPostWithReplies(reply))}
+            </ul>
+          )}
+        </li>
+      );
+    }
+  
+    // Render as a regular post
     return (
-      <li key={post.id}>
+      <li key={post.id} className="regular-post">
         <div className="user-info">
           <p>s/ {user ? user.username : ''}</p>
           <p>u/ {user ? user.university_name : ''}</p>
@@ -216,11 +383,11 @@ function Posts() {
             <textarea
               value={post.post_content}
               onChange={(e) => {
-                const updatedPosts = [...posts];
-                const postIndex = updatedPosts.findIndex((p) => p.id === post.id);
-                if (postIndex !== -1) {
-                  updatedPosts[postIndex].post_content = e.target.value;
-                  setPosts(updatedPosts);
+                const updatedTree = [...postTree];
+                const updatedPost = findPostById(updatedTree, post.id);
+                if (updatedPost) {
+                  updatedPost.post_content = e.target.value;
+                  setPostTree(updatedTree);
                 }
               }}
             />
@@ -278,20 +445,9 @@ function Posts() {
             )}
           </div>
         </div>
-        {/* Render replies */}
-        {post.replies && post.replies.length > 0 && (
+        {post.replies.length > 0 && (
           <ul className="replies">
-            {post.replies.map((reply) => (
-              <li key={reply.id}>
-                <div className="user-info">
-                  <p>s/ {getUser(reply.post_user_id)?.username}</p>
-                  <p>u/ {getUser(reply.post_user_id)?.university_name}</p>
-                </div>
-                <div className="content">
-                  <p>/{reply.post_content}</p>
-                </div>
-              </li>
-            ))}
+            {post.replies.map((reply) => renderPostWithReplies(reply))}
           </ul>
         )}
       </li>
@@ -303,11 +459,11 @@ function Posts() {
   }
 
   return (
-    <div className="posts-container">
+    <div className="posts-container" style={{ backgroundColor: universityColor }}>
       <h1 style={{ color: thread && thread.university_color }}>
         Thread: {thread ? thread.thread_title : ''}
       </h1>
-      <ul>{posts.map(post => renderPostWithReplies(post))}</ul>
+      <ul>{postTree.map(post => renderPostWithReplies(post))}</ul>
       {replyPostId && (
         <div className="reply-box">
           <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} />
