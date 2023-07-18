@@ -739,3 +739,27 @@ input[type="text"]:focus {
 .user-details-container button:hover {
   text-decoration: underline;
 }
+
+.button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.explore-button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.5rem;
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+  background-color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.explore-button:hover {
+  color: #333;
+  background-color: #f2f2f2;
+}

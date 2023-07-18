@@ -15,6 +15,8 @@ import UserDetails from "./UserDetails"
 import AddPost from './AddPost';
 import FeaturedThreads from './FeaturedThreads';
 import SearchUni from './SearchUni';
+import AllThreads from './AllThreads';
+import FeaturedUni from './FeaturedUnis';
 
 function App() {
 
@@ -172,15 +174,14 @@ function App() {
         <Route exact path="/">
           <div className="featured-header-box">
             <div className="featured-header-text">
-              <p className="main-subtitle">// Empowering Scholars, Navigating Success</p>
-              <p className="tagline">// Unlock Your Academic Potential with Community Wisdom</p>
+              <p className="main-subtitle">// All Schools, One Schoolhouse</p>
+              <p className="tagline">// Questions Asked & Answers Found</p>
             </div>
           </div>
+          <h1 style={{ fontSize: "3.5rem" }}>/explore universities:</h1>
+          <FeaturedUni universities={universities} />
           <h1 style={{ fontSize: "3.5rem" }}>/explore topics:</h1>
           <FeaturedThreads universities={universities}/>
-          <h1 style={{ fontSize: "3.5rem" }}>/explore universities:</h1>
-          {/* <Threads threads={threads} /> */}
-          <UniversitiesList universities={universities} />
         </Route>
         <Route path="/login">
           
@@ -199,6 +200,9 @@ function App() {
         <Route path="/universities">
           <SearchUni searchUniversities={searchUniversities} searchUni={searchUni}/>
           <UniversitiesList universities={filteredUniversities} />
+        </Route>
+        <Route path="/threads">
+          <AllThreads universities={universities} />
         </Route>
         <Route path="/add_university">
           <NewUniversityForm addUniversity={addUniversity} updatePostUniFormData={updatePostUniFormData} postUniFormData={postUniFormData}/>

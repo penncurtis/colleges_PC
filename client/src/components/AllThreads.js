@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-function FeaturedThreads({ universities }) {
+function AllThreads({ universities }) {
   const [threads, setThreads] = useState([]);
 
   useEffect(() => {
-    fetch(`/threads?sort=-thread_vote_count&limit=5`)
+    fetch(`/threads`)
       .then(response => response.json())
       .then(data => {
         setThreads(data);
       })
       .catch(error => console.log(error));
   }, []);
-
-  const sortedThreads = threads.sort((a, b) => b.thread_vote_count - a.thread_vote_count).slice(0, 5);
 
   const getSchoolname = (universityId) => {
     const university = universities.find(uni => uni.id === universityId);
@@ -28,7 +26,7 @@ function FeaturedThreads({ universities }) {
     <div className="featured-schoolname-container">
       <div className="featured-threads-container">
         <ul>
-        {sortedThreads.map(thread => {
+        {threads.map(thread => {
             const university = universities.find(uni => uni.id === thread.thread_university_id);
             const backgroundColor = university ? university.university_color : 'white';
 
@@ -42,11 +40,8 @@ function FeaturedThreads({ universities }) {
           })}
         </ul>
       </div>
-      <div className="button-container">
-        <Link to="/threads" className="explore-button">Explore More Threads</Link>
-        </div>
     </div>
   );
 }
 
-export default FeaturedThreads;
+export default AllThreads;
