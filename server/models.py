@@ -49,6 +49,12 @@ class User(db.Model, SerializerMixin):
     user_university_id = db.Column(db.Integer, db.ForeignKey('universities.id'))
 
     serialize_rules = ('-posts',)
+
+    @validates('password')
+    def validate_password(self, key, password):
+        if len(password) > 30:
+            raise ValueError('Password cannot exceed 30 characters.')
+        return password
     
 
 class Post(db.Model, SerializerMixin):

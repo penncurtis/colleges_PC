@@ -1,13 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChromePicker } from 'react-color';
+import { Redirect } from 'react-router-dom';
 
 function NewUniversityForm({ addUniversity, updatePostUniFormData, postUniFormData }) {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [color, setColor] = useState('#ffffff'); 
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
 
   const handleColorChange = (selectedColor) => {
     setColor(selectedColor.hex);
   };
+
+  useEffect(() => {
+    fetch(`/current_session`)
+      .then(response => response.json())
+      .then(data => {
+        setLoggedInUser(data);
+        if (!data) {
+          setRedirectToLogin(true);
+        }
+      })
+      .catch(error => console.log(error));
+    }, []);
 
   const convertHexToRgb = (hexColor) => {
     const hex = hexColor.replace('#', '');
@@ -20,6 +35,11 @@ function NewUniversityForm({ addUniversity, updatePostUniFormData, postUniFormDa
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    if (!loggedInUser) {
+        setRedirectToLogin(true);
+        return;
+    }
+
     const convertedColor = convertHexToRgb(color);
 
     const formData = {
@@ -31,6 +51,10 @@ function NewUniversityForm({ addUniversity, updatePostUniFormData, postUniFormDa
 
     setFormSubmitted(true);
   };
+
+  if (redirectToLogin) {
+    return <Redirect to="/login" />;
+  }
 
   return (
     <div className="new-university-form-container">

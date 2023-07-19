@@ -504,6 +504,19 @@ input[type="text"]:focus {
   font-weight: bold;
 }
 
+.featured-header-text .community-tagline {
+  font-size: 2rem; /* Larger font size */
+  font-family: 'Verdana', sans-serif;
+  font-style: italic; /* Italic style */
+  font-weight: bold;
+  margin-bottom: 0.5rem; /* Tightened margin */
+  width: 100%; /* Adjust the width as desired */
+  max-width: 800px; /* Set a maximum width if needed */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
 .featured-header-box {
   width: 100%;
   padding: 1rem;

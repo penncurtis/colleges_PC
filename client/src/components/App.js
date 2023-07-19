@@ -17,6 +17,7 @@ import FeaturedThreads from './FeaturedThreads';
 import SearchUni from './SearchUni';
 import AllThreads from './AllThreads';
 import FeaturedUni from './FeaturedUnis';
+import CommunityPage from './Community';
 
 function App() {
 
@@ -196,6 +197,9 @@ function App() {
 
         { currentUser ? <UserDetails currentUser={currentUser} logout={logout} /> : null }
 
+        </Route>
+        <Route path="/community">
+          <CommunityPage/>
         </Route>
         <Route path="/universities">
           <SearchUni searchUniversities={searchUniversities} searchUni={searchUni}/>
