@@ -50,11 +50,11 @@ class User(db.Model, SerializerMixin):
 
     serialize_rules = ('-posts',)
 
-    @validates('password')
-    def validate_password(self, key, password):
-        if len(password) > 30:
-            raise ValueError('Password cannot exceed 30 characters.')
-        return password
+    @validates('username')
+    def validate_username(self, key, username):
+        if len(username) > 30:
+            raise ValueError('Username cannot exceed 30 characters.')
+        return username
     
 
 class Post(db.Model, SerializerMixin):

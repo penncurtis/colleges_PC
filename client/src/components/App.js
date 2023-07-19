@@ -20,10 +20,6 @@ import FeaturedUni from './FeaturedUnis';
 import CommunityPage from './Community';
 
 function App() {
-
-  
-  
-
   
   // const [threadFormData, setThreadFormData] = useState({});
   const [universities, setUniversities] = useState([]);
