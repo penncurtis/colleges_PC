@@ -310,7 +310,7 @@ function Posts() {
                 }}
               />
             ) : (
-              <p>/{post.post_content}</p>
+              <p>/ {post.post_content}</p>
             )}
           </div>
           <div className="actions">
@@ -366,7 +366,7 @@ function Posts() {
           <div className="parent-post-info">
             <p>Reply to:</p>
             <p>s/ {parentUser ? parentUser.username : ''} u/ {parentUser ? parentUser.university_name : ''}</p>
-            <p>/{parentPost.post_content}</p>
+            <p>/ {parentPost.post_content}</p>
           </div>
           {post.replies.length > 0 && (
             <ul className="replies">
@@ -398,7 +398,7 @@ function Posts() {
               }}
             />
           ) : (
-            <p>/{post.post_content}</p>
+            <p>/ {post.post_content}</p>
           )}
         </div>
         <div className="actions">

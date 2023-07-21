@@ -88,7 +88,7 @@ const Threads = ({ universities }) => {
                   </div>
                 )}
               </div>
-              <Link to={`/${schoolname}/threads/${thread.id}/posts`}>/{thread.thread_title}</Link>
+              <Link to={`/${schoolname}/threads/${thread.id}/posts`}>/ {thread.thread_title}</Link>
             </li>
           ))}
         </ul>

@@ -35,7 +35,7 @@ function FeaturedThreads({ universities }) {
             return (
               <li key={thread.id} className="thread" style={{ backgroundColor }}>
                 <Link to={getThreadURL(getSchoolname(thread.thread_university_id), thread.id)}>
-                  /{getSchoolname(thread.thread_university_id)}/{thread.thread_title}
+                  / {getSchoolname(thread.thread_university_id)} / {thread.thread_title}
                 </Link>
               </li>
             );

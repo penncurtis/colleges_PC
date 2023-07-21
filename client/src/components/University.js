@@ -11,7 +11,7 @@ function University({ university }) {
   return (
     <Link to={`/${university_name}`} className="uni-link">
       <div className="uni" style={universityStyle}>
-        <h1>/{university_name}</h1>
+        <h1>/ {university_name}</h1>
       </div>
     </Link>
   );

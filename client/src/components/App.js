@@ -20,7 +20,7 @@ import FeaturedUni from './FeaturedUnis';
 import CommunityPage from './Community';
 
 function App() {
-  
+
   // const [threadFormData, setThreadFormData] = useState({});
   const [universities, setUniversities] = useState([]);
 
@@ -175,9 +175,9 @@ function App() {
               <p className="tagline">// Questions Asked & Answers Found</p>
             </div>
           </div>
-          <h1 style={{ fontSize: "3.5rem" }}>/explore universities:</h1>
+          <h1 style={{ fontSize: "3.5rem" }}>/ explore universities:</h1>
           <FeaturedUni universities={universities} />
-          <h1 style={{ fontSize: "3.5rem" }}>/explore topics:</h1>
+          <h1 style={{ fontSize: "3.5rem" }}>/ explore topics:</h1>
           <FeaturedThreads universities={universities}/>
         </Route>
         <Route path="/login">
